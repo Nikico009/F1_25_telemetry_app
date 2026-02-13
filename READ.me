@@ -1,0 +1,249 @@
+F1 25 TELEMETRY ANALYSIS APP
+===========================
+
+OVERVIEW
+--------
+
+This project is a desktop telemetry analysis application for F1 25, designed for
+post-session (offline) analysis using the official Codemasters UDP Telemetry
+Protocol in 2025 format.
+
+The application captures telemetry data broadcast locally by the game via UDP,
+parses and normalizes it, stores it in a local database, and provides a highly
+configurable visualization interface that allows:
+
+- Displaying multiple telemetry variables simultaneously
+- Selecting which variables are shown on each graph
+- Showing multiple graphs at the same time
+- Overlaying multiple telemetry curves per graph
+- Comparing multiple sessions of the same circuit
+- Filtering sessions by circuit and date
+
+Although the primary focus is post-analysis, the architecture is explicitly
+designed so that live telemetry visualization can be added in the future without
+modifying the telemetry core.
+
+This is a personal, desktop-only project intended for engineering practice and
+technical demonstration, published on GitHub for reference purposes.
+
+-------------------------------------------------------------------------------
+
+DESIGN GOALS
+------------
+
+- High-performance telemetry ingestion
+- Deterministic and reproducible offline analysis
+- Strict separation of concerns
+- Extensible and well-defined data model
+- Desktop-first architecture
+- Engineering-grade internal structure
+
+-------------------------------------------------------------------------------
+
+TARGET PLATFORM
+---------------
+
+- Operating System: Windows
+
+-------------------------------------------------------------------------------
+
+TELEMETRY SOURCE CONFIGURATION
+------------------------------
+
+The application consumes telemetry from F1 25 via local UDP broadcast.
+
+Default configuration (Codemasters standard):
+
+- UDP Protocol Version: 2025
+- Update Rate: 60 Hz
+- IP Address: 127.0.0.1
+- UDP Port: 20777
+
+All parameters are configurable via configuration files. The system assumes
+local-only telemetry capture.
+
+-------------------------------------------------------------------------------
+
+HIGH-LEVEL ARCHITECTURE
+-----------------------
+
+The system is divided into four main layers:
+
+F1 25 Game
+   |
+   |  UDP (60 Hz)
+   v
+Telemetry Core (C)
+   |
+   |  normalized telemetry samples
+   v
+Backend & Analysis Layer (Python)
+   |
+   |  structured queries
+   v
+Visualization Layer (Python / Qt)
+
+Each layer is isolated to minimize coupling and to allow future extensions
+without architectural rewrites.
+
+-------------------------------------------------------------------------------
+
+LANGUAGES AND TECHNOLOGIES
+-------------------------
+
+Telemetry Core:
+- Language: C
+- Responsibilities:
+  - UDP socket management
+  - Binary packet parsing (Codemasters 2025 format)
+  - High-precision timestamping
+  - Data validation and sanity checks
+  - Emission of normalized telemetry samples
+
+Rationale:
+- Predictable performance
+- Low latency
+- Precise control over memory layout
+- Suitable for high-frequency UDP streams
+
+Backend and Analysis:
+- Language: Python
+- Responsibilities:
+  - Session lifecycle management
+  - Telemetry ingestion orchestration
+  - Derived metrics computation (delta time, averages, etc.)
+  - Filtering and comparison logic
+  - Database access layer
+
+Rationale:
+- Rapid development
+- Strong numerical and data-processing ecosystem
+- Clear expression of analysis logic
+
+Visualization Layer:
+- Language: Python
+- Framework: PySide6 (Qt)
+- Graph Engine: PyQtGraph
+- Responsibilities:
+  - Multi-panel graph layouts
+  - Interactive plots (zoom, pan, legend toggling)
+  - Variable selection per graph
+  - Session selection and comparison
+  - Enforcement of comparison constraints
+
+Database:
+- Engine: SQLite
+- Scope: Local-only
+- Rationale:
+  - Zero configuration
+  - Adequate performance for telemetry workloads
+  - Easy inspection and versioning
+
+-------------------------------------------------------------------------------
+
+DATA MODEL
+----------
+
+Circuit:
+- circuit_id (primary key)
+- name
+- length
+
+Session:
+- session_id (primary key)
+- circuit_id (foreign key)
+- timestamp
+- game_mode
+- weather
+- udp_protocol_version
+- telemetry_rate_hz
+
+Lap:
+- lap_id (primary key)
+- session_id (foreign key)
+- lap_number
+- lap_time
+- is_valid
+
+TelemetrySample:
+- sample_timestamp
+- lap_id (foreign key)
+
+- speed
+- engine_rpm
+- gear
+- throttle
+- brake
+- steering
+
+- tyre_temp_fl
+- tyre_temp_fr
+- tyre_temp_rl
+- tyre_temp_rr
+
+- brake_temp_fl
+- brake_temp_fr
+- brake_temp_rl
+- brake_temp_rr
+
+- drs_active
+
+This model supports:
+- Arbitrary telemetry variable selection
+- Multi-session overlays
+- High-resolution lap reconstruction
+- Reliable historical comparisons
+
+-------------------------------------------------------------------------------
+
+VISUALIZATION RULES AND CONSTRAINTS
+----------------------------------
+
+- Multiple graphs can be displayed simultaneously
+- Each graph displays one telemetry variable
+- Each graph can contain multiple curves
+- Each curve corresponds to a different session or lap
+- All curves within a graph must belong to the same circuit
+- Cross-circuit comparisons are explicitly forbidden
+- Session identity is encoded visually using color and legends
+
+-------------------------------------------------------------------------------
+
+EXTENSIBILITY: LIVE TELEMETRY
+-----------------------------
+
+Although the system is currently focused on post-session analysis:
+
+- The telemetry core is session-agnostic
+- UDP capture is continuous and stateless
+- Storage and visualization layers are decoupled
+
+This allows future implementation of:
+- Live dashboards
+- Real-time telemetry visualization
+- Streaming-only modes
+
+without modifying the core UDP ingestion logic.
+
+-------------------------------------------------------------------------------
+
+PLANNED ENHANCEMENTS
+--------------------
+
+- Delta-time reference laps
+- Telemetry event markers (braking points, gear shifts, DRS)
+- Visualization presets (race analysis, tyre analysis, qualifying)
+- Export to CSV or Parquet
+- Offline telemetry replay
+
+-------------------------------------------------------------------------------
+
+PROJECT STATUS
+--------------
+
+This is a personal engineering project intended to explore telemetry systems,
+data-driven software architecture, and advanced visualization techniques.
+It is not intended for commercial use.
+
+-------------------------------------------------------------------------------
+

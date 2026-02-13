@@ -8,7 +8,7 @@ import random
 
 # ================= CONFIG =================
 TARGET_IP = "127.0.0.1"
-TARGET_PORT = 5005
+TARGET_PORT = 20777
 FREQUENCY = 60  # Hz
 
 # Packet format:

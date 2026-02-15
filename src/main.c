@@ -20,7 +20,7 @@ int main()
 
             uint8_t buffer[MAX_PCKT_LEN] = {0};
             int len = serialize_packet(&packet, buffer);
-            
+
             if(len <= 0){
               fprintf(stderr, "Serializing error\n");
             }

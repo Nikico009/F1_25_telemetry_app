@@ -5,7 +5,7 @@
 #include "tcp_exporter.h"
 
 #define BACKEND_IP   "127.0.0.1"
-#define BACKEND_PORT 6900
+#define BACKEND_PORT 8080
 
 int serialize_packet(const packet_t *pkt, uint8_t *buffer)
 {
